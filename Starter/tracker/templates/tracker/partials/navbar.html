@@ -13,6 +13,18 @@
       </button>
       <div class="hidden w-full md:block md:w-auto" id="navbar-default">
         <ul class="font-medium flex flex-col p-4 md:p-0 my-1 md:my-2 rounded-lg md:flex-row md:space-x-8">
+
+        
+            <li>
+                <a href="{% url 'transaction-list' %}" 
+                    class="block py-2 pl-3 pr-4 text-white rounded md:p-0" 
+                    aria-current="page">
+                        My Transcations
+                </a>
+            </li>
+        
+
+
         
         {% if user.is_authenticated %}
             <li>

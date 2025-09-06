@@ -1,0 +1,14 @@
+{% load widget_tweaks %}
+
+<h1 class="text-2xl font-bold mb-4">
+    Update Transaction</h1>
+
+
+<form hx-post="{% url 'update-transaction' transaction.id %}">
+ {% include 'tracker/partials/transaction-form.html' %}
+
+
+     <button class="btn btn-primary">Update Transaction</button>
+    <button class="btn btn-primary" hx-get="{% url 'transaction-list' %}" hx-target="#transaction-block">Cancel</button>
+
+</form>

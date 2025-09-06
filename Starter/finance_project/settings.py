@@ -26,7 +26,7 @@ INSTALLED_APPS = [
     'django.contrib.sites',
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    
+    "django.contrib.humanize",
     # external apps
     "django_extensions",
     "debug_toolbar",
@@ -34,7 +34,10 @@ INSTALLED_APPS = [
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
-    
+    # add django-filter
+    'django_filters',
+    'django_htmx',
+
     # project apps
     "tracker",
     
@@ -52,6 +55,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "django_htmx.middleware.HtmxMiddleware",
 ]
 
 ROOT_URLCONF = "finance_project.urls"
@@ -138,3 +142,5 @@ INTERNAL_IPS = [
 
 AUTH_USER_MODEL = 'tracker.User'
 LOGIN_REDIRECT_URL = 'index'
+
+PAGE_SIZE = 5
