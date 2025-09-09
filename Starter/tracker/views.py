@@ -8,6 +8,7 @@ from .forms import TransactionForm
 from django_htmx.http import retarget
 from django.core.paginator import Paginator
 from django.conf import settings
+from .charting import plot_incom_expense_bar_chart, plot_income_expense_pie_chart
 # Create your views here.
 def index(request):
     return render(request, 'tracker/index.html')
@@ -21,11 +22,11 @@ def transaction_list(request):
     # transaction_filter = TransactionFilter(request.GET, queryset=Transaction.objects.filter(user=request.user).select_related('category'))
 
     paginator = Paginator(transaction_filter.qs, settings.PAGE_SIZE)  # Show 5 transactions per page.
-
+    transaction_page = paginator.page(1)  # Get the first page of transactions.
     total_income = transaction_filter.qs.get_total_income()
     total_expenses = transaction_filter.qs.get_total_expenses()
     context = {
-        # 'transactions': transaction_filter.qs,
+        'transactions': transaction_page,
         'filter': transaction_filter,
         'total_income': total_income,
         'total_expenses': total_expenses,
@@ -91,3 +92,33 @@ def delete_transaction(request, pk):
     transaction.delete()
     context= {"message": f"Transaction {transaction.id} deleted successfully!"}
     return render(request, 'tracker/partials/transaction-success.html', context)
+
+
+@login_required
+def get_transactions(request):
+    page = request.GET.get('page', 1) # ?page=2
+    transaction_filter = TransactionFilter(request.GET, queryset=Transaction.objects.all().select_related('category'))
+    paginator = Paginator(transaction_filter.qs, settings.PAGE_SIZE)  # Show 5 transactions per page.
+    context = {
+        'transactions': paginator.page(page),
+
+    }
+    return render(request, 'tracker/partials/transaction-container.html#transaction_list', context)
+
+def transaction_charts(request):
+    # Logic for transaction charts
+    transaction_filter = TransactionFilter(request.GET, queryset=Transaction.objects.all().select_related('category'))
+    inconme_expense_chart = plot_incom_expense_bar_chart(transaction_filter.qs)
+
+    income_pie_chart = plot_income_expense_pie_chart(transaction_filter.qs.filter(type='income'))
+    expense_pie_chart = plot_income_expense_pie_chart(transaction_filter.qs.filter(type='expense'))
+
+    context = {
+        'filter': transaction_filter,
+        'income_expense_barchart': inconme_expense_chart.to_html(),
+        'income_pie_chart': income_pie_chart.to_html(),
+        'expense_pie_chart': expense_pie_chart.to_html()
+    }
+    if request.htmx:
+        return render(request, 'tracker/partials/charts-container.html', context)
+    return render(request, 'tracker/charts.html', context)

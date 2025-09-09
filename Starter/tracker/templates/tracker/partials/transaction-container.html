@@ -1,4 +1,5 @@
 {% load widget_tweaks %} {% load humanize %}
+{% load partials %}
 
 <div
   class="flex flex-col-reverse md:grid md:grid-cols-4 md:gap-4"
@@ -56,7 +57,7 @@
       </a>
     </div>
 
-    {% if filter.qs %}
+    {% if transactions %}
     <table class="table">
       <thead class="text-xs text-white uppercase">
         <tr>
@@ -68,8 +69,23 @@
         </tr>
       </thead>
       <tbody>
-        {% for transaction in filter.qs %}
-        <tr>
+
+        {% partialdef transaction_list inline=True %}
+
+        {% for transaction in transactions %}
+
+        {% if forloop.last and transactions.has_next %}
+          <tr hx-get="{% url 'get-transactions' %}?page={{ transactions.next_page_number }}"
+            hx-trigger="revealed"
+            hx-swap="afterend"
+            hx-include="#filter-form"
+            hx-indicator="#loading-indicator"
+            
+          >
+          
+        {% else %}
+          <tr>
+        {% endif %}
           <td>{{transaction.date}}</td>
           <td>{{transaction.category}}</td>
           <td>{{transaction.amount}}</td>
@@ -99,7 +115,10 @@
 
           </td>
         </tr>
+          
         {% endfor %}
+      {% endpartialdef %}
+
       </tbody>
     </table>
 
@@ -114,6 +133,7 @@
       hx-get="{% url 'transaction-list' %}"
       hx-target="#transaction-container"
       hx-swap="outerHTML"
+      id="filter-form"
     >
       <div class="mb-2 form-controls">
         {{ filter.form.transaction_type|add_label_class:"label text-white" }} 
@@ -140,4 +160,10 @@
       <button class="btn btn-success">Filters</button>
     </form>
   </div>
+
 </div>
+<span id="loading-indicator" class="loading loading-ring loading-xl htmx-indicator" >
+{% comment %} {% if forloop.last and transactions.has_next %}
+<span id="loading-indicator" class="loading loading-ring loading-xl hx-indicator" ></span>
+{% endif %} {% endcomment %}
+{% comment %} <span id="loading-indicator" class=" hx-indicator"></span> {% endcomment %}
