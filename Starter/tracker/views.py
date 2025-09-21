@@ -8,7 +8,9 @@ from .forms import TransactionForm
 from django_htmx.http import retarget
 from django.core.paginator import Paginator
 from django.conf import settings
+from django.http import HttpResponse
 from .charting import plot_incom_expense_bar_chart, plot_income_expense_pie_chart
+from .resources import TransactionResource
 # Create your views here.
 def index(request):
     return render(request, 'tracker/index.html')
@@ -122,3 +124,14 @@ def transaction_charts(request):
     if request.htmx:
         return render(request, 'tracker/partials/charts-container.html', context)
     return render(request, 'tracker/charts.html', context)
+
+@login_required
+def export(request):
+    if request.htmx:
+        return HttpResponse(headers={'HX-Redirect': request.get_full_path()})
+    transaction_filter = TransactionFilter(request.GET, queryset=Transaction.objects.all().select_related('category'))
+    data = TransactionResource().export(transaction_filter.qs)
+
+    response = HttpResponse(data.csv, content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="transactions.csv"'
+    return response

@@ -41,6 +41,7 @@ INSTALLED_APPS = [
 
     # project apps
     "tracker",
+    "import_export",
     
     
 ]
