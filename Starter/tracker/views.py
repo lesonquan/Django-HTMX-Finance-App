@@ -11,6 +11,7 @@ from django.conf import settings
 from django.http import HttpResponse
 from .charting import plot_incom_expense_bar_chart, plot_income_expense_pie_chart
 from .resources import TransactionResource
+from tablib import Dataset
 # Create your views here.
 def index(request):
     return render(request, 'tracker/index.html')
@@ -135,3 +136,26 @@ def export(request):
     response = HttpResponse(data.csv, content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="transactions.csv"'
     return response
+
+
+@login_required
+def import_transactions(request):
+    if request.method == 'POST':
+        file = request.FILES.get('file')
+        print(file)
+        dataset = Dataset()
+        dataset.load(file.read().decode(), format='csv')
+        resource = TransactionResource()
+        result = resource.import_data(dataset, user=request.user, dry_run=True)  # Test the data import
+        for row in result:
+            for error in row.errors:
+                print(error.error)
+
+        if not result.has_errors():
+            resource.import_data(dataset, user=request.user, dry_run=False)  # Actually import the data
+            context = {'message': 'Transactions imported successfully!'}
+        else:
+            context = {'errors': result.row_errors()}
+        return render(request, 'tracker/partials/transaction-success.html', context)
+
+    return render(request, 'tracker/partials/import-transaction.html')
